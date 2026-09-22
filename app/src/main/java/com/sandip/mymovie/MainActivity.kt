@@ -2,6 +2,8 @@ package com.sandip.mymovie
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
@@ -11,6 +13,9 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: MovieAdapter
+    private lateinit var progressBar: ProgressBar
+
+    private val apiRepository = ApiRepository()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -18,24 +23,32 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         recyclerView = findViewById(R.id.movieRecyclerView)
+        progressBar = findViewById(R.id.progressBar)
 
         recyclerView.layoutManager = GridLayoutManager(this, 3)
 
         adapter = MovieAdapter(emptyList()) { movie ->
-            if (movie.embedLink.isNotBlank()) {
-                val intent = Intent(this, PlayerActivity::class.java)
 
-                intent.putExtra("title", movie.title)
-                intent.putExtra("video_url", movie.embedLink)
+            if (movie.embedLink.isBlank()) {
 
-                startActivity(intent)
-            } else {
                 Toast.makeText(
                     this,
-                    "Video link उपलब्ध नहीं है",
+                    "इस movie का video link उपलब्ध नहीं है",
                     Toast.LENGTH_SHORT
                 ).show()
+
+                return@MovieAdapter
             }
+
+            val intent = Intent(
+                this,
+                PlayerActivity::class.java
+            )
+
+            intent.putExtra("title", movie.title)
+            intent.putExtra("video_url", movie.embedLink)
+
+            startActivity(intent)
         }
 
         recyclerView.adapter = adapter
@@ -45,19 +58,42 @@ class MainActivity : AppCompatActivity() {
 
     private fun loadMovies() {
 
-        // अभी temporary data है।
-        // अगले step में Cloudflare API से असली data आएगा।
+        progressBar.visibility = View.VISIBLE
 
-        val movies = listOf(
-            Movie(
-                title = "Sample Movie",
-                poster = "",
-                category = "Bollywood",
-                embedLink = "",
-                downloadLink = ""
-            )
+        apiRepository.getMovies(
+
+            onSuccess = { movies ->
+
+                runOnUiThread {
+
+                    progressBar.visibility = View.GONE
+
+                    adapter.updateMovies(movies)
+
+                    if (movies.isEmpty()) {
+
+                        Toast.makeText(
+                            this,
+                            "कोई movie नहीं मिली",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            },
+
+            onError = { error ->
+
+                runOnUiThread {
+
+                    progressBar.visibility = View.GONE
+
+                    Toast.makeText(
+                        this,
+                        error,
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
         )
-
-        adapter.updateMovies(movies)
     }
 }
