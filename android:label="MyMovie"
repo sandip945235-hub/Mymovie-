@@ -1,6 +1,0 @@
-<application
-    android:allowBackup="true"
-    android:usesCleartextTraffic="true"
-    android:label="MyMovie"
-    android:supportsRtl="true"
-    android:theme="@style/Theme.MyMovie">
