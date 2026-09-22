@@ -21,7 +21,7 @@ jobs:
           java-version: '17'
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v2
 
       - name: Install Android SDK
         run: |
@@ -42,3 +42,4 @@ jobs:
         with:
           name: MyMovie-debug-apk
           path: app/build/outputs/apk/debug/*.apk
+          
